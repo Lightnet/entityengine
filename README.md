@@ -4,6 +4,10 @@
 
 # Created By: Lightnet
 
+# Status:
+ * Prototype buiild
+ * 
+
 # Packages:
  * glfw
  * vulkan sdk
@@ -59,7 +63,8 @@ cd Debug
 START /wait eeapp.exe
 ::START /wait ecme.exe
 ```
-
+# Base Ideas:
+ * https://github.com/farbrausch/fr_public
 
 
 # Notes:

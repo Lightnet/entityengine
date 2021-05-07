@@ -20,7 +20,7 @@ else() #DEFAULT TO DEBUG
   message("CMAKE_BUILD_TYPE Debug")
 endif()
 
-project(eeapp VERSION 0.0.1)
+project(eebasecpp VERSION 0.0.1)
 
 #add_definitions(-DECM_TEST01)
 #add_definitions(-DECME_VULKAN)
@@ -53,6 +53,10 @@ set(ENTRYPOINT
   #src/main.cpp
 )
 #message("ENTRYPOINT: ${ENTRYPOINT}") # console log
+
+set(enable_c_build OFF)
+set(enable_cpp_build OFF)
+set(enable_cpp01_build ON)
 
 #set(FETCHCONTENT_SOURCE_DIR_SDL ON)
 #set(FETCHCONTENT_SOURCE_DIR_SDL_IMAGE ON)
@@ -161,7 +165,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 #set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD 11)
 #set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD 17)
+#set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 #if(MSVC)
@@ -631,63 +636,149 @@ endif()
 # INCLUDE DIRS
 #================================================
 include_directories(${CPP_INCLUDE_DIRS})
-include_directories(${CPP_INCLUDE_DIRS}/srcee)
+include_directories(${CPP_INCLUDE_DIRS}/src_ee_c)
+include_directories(${CPP_INCLUDE_DIRS}/src_ee_cpp)
 #================================================
 # EXECUTE APP TEST
 #================================================
 #add_executable(${PROJECT_NAME} ${ENTRYPOINT})
+if(enable_c_build)
+  set(EE00C 
+    #src_ee_c/eemain.c
+    #src_ee_c/triangle-vulkan.c
+    #src_ee_c/glfw301.c 
+    #src_ee_c/glfw3vulkan01.c
+    src_ee_c/glfw3vulkan03.c
+  )
+  set(EE00C_Name eecbase)
 
-set(ENTRYPOINT
-  srcee/eemain.cpp
-)
+  set(EE00_FILES "")
+  set(EE00_DIR src_ee_c)
 
-set(EE01_FILES "")
-set(EE01_DIR srcee)
+  file(GLOB EE00_FILES 
+    #"${EE00_DIR}/*.cpp"
+    #"${EE00_DIR}/core/*.h"
+    "${EE00_DIR}/core/createVkInstance.h"
+    #"${EE00_DIR}/core/*.c"
+    #"${EE00_DIR}/scene/*.hpp"
+    #"${EE00_DIR}/scene/*.cpp"
+    #"${EE00_DIR}/application/*.hpp"
+    #"${EE00_DIR}/application/*.cpp"
+    #"${EE00_DIR}/application/vulkan/*.hpp"
+    #"${EE00_DIR}/application/vulkan/*.cpp"
+  )
 
-file(GLOB EE01_FILES 
-  #"${EE01_DIR}/*.cpp"
-  "${EE01_DIR}/core/*.hpp"
-  "${EE01_DIR}/core/*.cpp"
-  #"${EE01_DIR}/scene/*.hpp"
-  #"${EE01_DIR}/scene/*.cpp"
-  "${EE01_DIR}/application/*.hpp"
-  "${EE01_DIR}/application/*.cpp"
-  "${EE01_DIR}/application/vulkan/*.hpp"
-  "${EE01_DIR}/application/vulkan/*.cpp"
-)
+  add_executable(eebasec
+    #${CPP_HEADER_FILES}
+    #${CPP_SOURCE_FILES}
+    ${EE00_FILES}
+    ${EE00C}
+  )
 
-add_executable(${PROJECT_NAME} 
-  ${CPP_HEADER_FILES}
-  ${CPP_SOURCE_FILES}
-  ${EE01_FILES}
-  ${ENTRYPOINT} 
-)
+  target_link_libraries(eebasec
+    ${CPP_LIBS}
+  )
+endif()
 #================================================
-# LIBRARIES
-#================================================
-#message("OPENGL_LIBRARIES >>> " ${OPENGL_LIBRARIES})
-target_link_libraries(${PROJECT_NAME} 
-  ${CPP_LIBS}
-  #${OPENGL_LIBRARIES} #opengl32
-  #glad
-)
+if(enable_cpp_build)
+  set(ENTRYPOINT
+    src_ee_cpp/eemain.cpp
+    #src_ee_cpp/glfw3vulkan01.cpp
+  )
+
+  set(EE01_FILES "")
+  set(EE01_DIR src_ee_cpp)
+
+  file(GLOB EE01_FILES 
+    #"${EE01_DIR}/*.cpp"
+    "${EE01_DIR}/core/*.hpp"
+    "${EE01_DIR}/core/*.cpp"
+    #"${EE01_DIR}/scene/*.hpp"
+    #"${EE01_DIR}/scene/*.cpp"
+    "${EE01_DIR}/application/*.hpp"
+    "${EE01_DIR}/application/*.cpp"
+    "${EE01_DIR}/application/vulkan/*.hpp"
+    "${EE01_DIR}/application/vulkan/*.cpp"
+  )
+
+  add_executable(${PROJECT_NAME} 
+    ${CPP_HEADER_FILES}
+    ${CPP_SOURCE_FILES}
+    ${EE01_FILES}
+    ${ENTRYPOINT} 
+  )
+  #================================================
+  # LIBRARIES
+  #================================================
+  #message("OPENGL_LIBRARIES >>> " ${OPENGL_LIBRARIES})
+  target_link_libraries(${PROJECT_NAME} 
+    ${CPP_LIBS}
+    #${OPENGL_LIBRARIES} #opengl32
+    #glad
+  )
+
+  set(GLSLC "${VULKAN_PATH}/Bin/glslc.exe")
+  add_custom_command(TARGET ${PROJECT_NAME} 
+    PRE_BUILD 
+    COMMAND ${GLSLC} ${CMAKE_CURRENT_SOURCE_DIR}/shaders/shader.vert -o ${CMAKE_BINARY_DIR}/Debug/shaders/vert.spv
+    COMMAND ${GLSLC} ${CMAKE_CURRENT_SOURCE_DIR}/shaders/shader.frag -o ${CMAKE_BINARY_DIR}/Debug/shaders/frag.spv
+    COMMENT "BUILD SHADERS OUTPUT!"
+  )
+endif()
+
+if(enable_cpp01_build)
+  set(ENTRYPOINTEE02
+    src/eemain.cpp
+    #tests/vulkantriangle01.cpp
+    #src_ee_cpp/glfw3vulkan01.cpp
+  )
+
+  set(EE02_FILES "")
+  set(EE02_DIR src)
+
+  file(GLOB EE02_FILES 
+    #"${EE02_DIR}/*.cpp"
+    "${EE02_DIR}/core/*.hpp"
+    "${EE02_DIR}/core/*.cpp"
+    #"${EE02_DIR}/scene/*.hpp"
+    #"${EE02_DIR}/scene/*.cpp"
+    #"${EE02_DIR}/application/*.hpp"
+    #"${EE02_DIR}/application/*.cpp"
+    "${EE02_DIR}/application/vulkan/*.hpp"
+    "${EE02_DIR}/application/vulkan/*.cpp"
+  )
+
+  add_executable(${PROJECT_NAME} 
+    ${CPP_HEADER_FILES}
+    ${CPP_SOURCE_FILES}
+    ${EE02_FILES}
+    ${ENTRYPOINTEE02} 
+  )
+  #================================================
+  # LIBRARIES
+  #================================================
+  #message("OPENGL_LIBRARIES >>> " ${OPENGL_LIBRARIES})
+  target_link_libraries(${PROJECT_NAME} 
+    ${CPP_LIBS}
+    #${OPENGL_LIBRARIES} #opengl32
+    #glad
+  )
+
+  set(GLSLC "${VULKAN_PATH}/Bin/glslc.exe")
+  add_custom_command(TARGET ${PROJECT_NAME} 
+    PRE_BUILD 
+    COMMAND ${GLSLC} ${CMAKE_CURRENT_SOURCE_DIR}/shaders/shader.vert -o ${CMAKE_BINARY_DIR}/Debug/shaders/vert.spv
+    COMMAND ${GLSLC} ${CMAKE_CURRENT_SOURCE_DIR}/shaders/shader.frag -o ${CMAKE_BINARY_DIR}/Debug/shaders/frag.spv
+    COMMENT "BUILD SHADERS OUTPUT!"
+  )
+endif()
 #[[
-
 ]]
-
-set(GLSLC "${VULKAN_PATH}/Bin/glslc.exe")
-
-add_custom_command(TARGET ${PROJECT_NAME} 
-	PRE_BUILD 
-	COMMAND ${GLSLC} ${CMAKE_CURRENT_SOURCE_DIR}/shaders/shader.vert -o ${CMAKE_BINARY_DIR}/Debug/shaders/vert.spv
-	COMMAND ${GLSLC} ${CMAKE_CURRENT_SOURCE_DIR}/shaders/shader.frag -o ${CMAKE_BINARY_DIR}/Debug/shaders/frag.spv
-	COMMENT "BUILD SHADERS OUTPUT!"
-)
-
 #================================================
 # EXECUTE APP ECME CPP
 #================================================
 # https://stackoverflow.com/questions/15550777/how-do-i-exclude-a-single-file-from-a-cmake-fileglob-pattern/15551302
+#[[
 set(CPP_ECME01_FILES "")
 set(ECME01_DIR src02)
 
@@ -702,9 +793,7 @@ file(GLOB CPP_ECME01_FILES
   "${ECME01_DIR}/application/vulkan/*.hpp"
   "${ECME01_DIR}/application/vulkan/*.cpp"
 )
-
 #message("CPP_ECME01_FILES >>> "  ${CPP_ECME01_FILES})
-#[[
 add_executable(ecme 
   ${CPP_HEADER_FILES}
   ${CPP_SOURCE_FILES}
@@ -716,7 +805,6 @@ target_link_libraries(ecme
   #opengl32
 )
 ]]
-
 #================================================
 # INCLUDE DIRS
 #================================================
